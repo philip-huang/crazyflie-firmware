@@ -311,6 +311,7 @@ static uint32_t lastFlightCmd;
 static uint32_t takeoffTime;
 static uint32_t tdoaCount;
 static float yaw_logback;
+static float yaw_error_logback;
 
 /**
  * Supporting and utility functions
@@ -1040,22 +1041,23 @@ static void stateEstimatorUpdateWithPosVelYaw(posvelyawMeasurement_t *posvelyaw,
 	  }
 
 	  // direct measurement of yaw (yaw error STATE_D2)
-//	  float h[STATE_DIM] = {0};
-//	  arm_matrix_instance_f32 H = {1, STATE_DIM, h};
-//	  h[STATE_D2] = -1; // the Jacobian
-//	  float pred_yaw = atan2f(2*(q[1]*q[2]+q[0]*q[3]) , q[0]*q[0] + q[1]*q[1] - q[2]*q[2] - q[3]*q[3]);
-//	  float yaw_error = posvelyaw->yaw - pred_yaw;
-//
-//	  // wrap yaw_error between (-PI, PI]
-//	  while (yaw_error > PI){
-//		  yaw_error -= (float) 2.0 * PI;
-//	  }
-//
-//	  while (yaw_error <= -PI){
-//		  yaw_error += (float) 2.0 * PI;
-//	  }
-//
-//	  stateEstimatorScalarUpdate(&H, yaw_error, posvelyaw->stdDev_yaw);
+	  float h[STATE_DIM] = {0};
+	  arm_matrix_instance_f32 H = {1, STATE_DIM, h};
+	  h[STATE_D2] = 1; // the Jacobian
+	  float pred_yaw = atan2f(2*(q[1]*q[2]+q[0]*q[3]) , q[0]*q[0] + q[1]*q[1] - q[2]*q[2] - q[3]*q[3]);
+	  float yaw_error = posvelyaw->yaw - pred_yaw;
+	  yaw_error_logback = yaw_error;
+
+	  // wrap yaw_error between (-PI, PI]
+	  while (yaw_error > PI){
+		  yaw_error -= (float) 2.0 * PI;
+	  }
+
+	  while (yaw_error <= -PI){
+		  yaw_error += (float) 2.0 * PI;
+	  }
+
+	  stateEstimatorScalarUpdate(&H, yaw_error, posvelyaw->stdDev_yaw);
 }
 
 static void stateEstimatorUpdateWithDistance(distanceMeasurement_t *d)
@@ -1606,6 +1608,7 @@ LOG_GROUP_START(kalman)
   LOG_ADD(LOG_FLOAT, q2, &q[2])
   LOG_ADD(LOG_FLOAT, q3, &q[3])
   LOG_ADD(LOG_FLOAT, yaw, &yaw_logback)
+  LOG_ADD(LOG_FLOAT, yaw_error, &yaw_error_logback)
 LOG_GROUP_STOP(kalman)
 
 PARAM_GROUP_START(kalman)
