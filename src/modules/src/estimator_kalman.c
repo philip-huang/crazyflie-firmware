@@ -1049,15 +1049,19 @@ static void stateEstimatorUpdateWithPosVelYaw(posvelyawMeasurement_t *posvelyaw,
 	  yaw_error_logback = yaw_error;
 
 	  // wrap yaw_error between (-PI, PI]
-	  while (yaw_error > PI){
-		  yaw_error -= (float) 2.0 * PI;
-	  }
+//	  while (yaw_error > PI){
+//		  yaw_error -= (float) 2.0 * PI;
+//	  }
+//
+//	  while (yaw_error <= -PI){
+//		  yaw_error += (float) 2.0 * PI;
+//	  }
 
-	  while (yaw_error <= -PI){
-		  yaw_error += (float) 2.0 * PI;
-	  }
 
-	  stateEstimatorScalarUpdate(&H, yaw_error, posvelyaw->stdDev_yaw);
+	  // Add yaw measurement to Kalman filter if yaw estimate is valid (i.e., in (-PI, PI])
+	  if ((posvelyaw->yaw > -PI) && (posvelyaw->yaw <= -PI)){
+		  stateEstimatorScalarUpdate(&H, yaw_error, posvelyaw->stdDev_yaw);
+	  }
 }
 
 static void stateEstimatorUpdateWithDistance(distanceMeasurement_t *d)
