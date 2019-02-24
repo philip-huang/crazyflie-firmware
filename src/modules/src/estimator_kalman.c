@@ -1059,7 +1059,7 @@ static void stateEstimatorUpdateWithPosVelYaw(posvelyawMeasurement_t *posvelyaw,
 
 
 	  // Add yaw measurement to Kalman filter if yaw estimate is valid (i.e., in (-PI, PI])
-	  if ((posvelyaw->yaw > -PI) && (posvelyaw->yaw <= -PI)){
+	  if ((posvelyaw->yaw > -PI) && (posvelyaw->yaw <= PI)){
 		  stateEstimatorScalarUpdate(&H, yaw_error, posvelyaw->stdDev_yaw);
 	  }
 }
